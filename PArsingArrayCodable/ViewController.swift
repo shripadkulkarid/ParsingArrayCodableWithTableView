@@ -8,25 +8,30 @@
 
 import UIKit
 
-class ViewController: UIViewController {
-     let url = URL(string:"https://api.androidhive.info/contacts/")
-
+class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource {
+    let url = URL(string:"https://api.androidhive.info/contacts/")
+    @IBOutlet weak var tableView: UITableView!
+    var contacts:[Contact] = []
+    var name = String()
     override func viewDidLoad() {
         super.viewDidLoad()
-
-
-       //  To read values from URLs:
-
+        
+        self.tableView.delegate = self
+        self.tableView.dataSource = self
+        //  To read values from URLs:
         URLSession.shared.dataTask(with: url!) { (data, response
             , error) in
-            
+    
             guard let data = data else{return}
             do{
                 let decoder = JSONDecoder()
                 let gitData = try decoder.decode(Contacts.self, from: data)
-
+                
+                self.contacts = gitData.contacts!
+                
+                
                 for i in gitData.contacts! {
-                     print(i.name!)
+                    print(i.name!)
                     print(i.email!)
                     print(i.gender!)
                     print(i.address!)
@@ -34,25 +39,67 @@ class ViewController: UIViewController {
                     print(i.phone!.mobile?.rawValue ?? "")
                     print(i.phone!.office?.rawValue ?? "")
                 }
-                
-             
+
+
             }catch let err {
                 print("Err", err)
             }
-            
+            DispatchQueue.main.async {
+                 self.tableView.reloadData()
+            }
+
             }.resume()
+
+        
     }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return contacts.count
     }
-
-
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        
+        var cell = tableView.dequeueReusableCell(withIdentifier: "cell")
+        if cell == nil {
+            cell = UITableViewCell(style: UITableViewCellStyle.value2, reuseIdentifier: "cell")
+        }
+       cell?.textLabel?.text = contacts[indexPath.row].name
+       cell?.detailTextLabel?.text = contacts[indexPath.row].email
+        
+        return cell!
+    }
+    
+    
+    
+    
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class Contacts: Codable {
-    let contacts: [Contact]?
+    var contacts: [Contact]?
     
     init(contacts: [Contact]?) {
         self.contacts = contacts
